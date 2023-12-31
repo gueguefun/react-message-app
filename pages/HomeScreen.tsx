@@ -3,25 +3,25 @@ import { View, Image, ActivityIndicator, StyleSheet, Text, Appearance } from 're
 import io from 'socket.io-client';
 
 const HomeScreen = () => {
-    const [connected, setConnected] = useState("");
+    const [logs, setLogs] = useState("");
+    const [conversations, setConversations] = useState([]);
 
     useEffect(() => {
         const socket = io('http://82.64.216.185:6971');
       
         socket.on('connect', () => {
           console.log('Connecté au serveur Socket.io');
-          setConnected("Tu es connecté au serveur Socket.io");
         });
 
-        socket.on('newMessage', (message) => {
-            // Traitez le nouveau message reçu du serveur
-            console.log('Nouveau message:', message);
-            setConnected(message);
-          });
+        socket.on('conversationsList', (conversationsList) => {
+            setConversations(conversationsList);
+        });
+
+         // Émettre l'événement pour obtenir la liste des conversations de l'utilisateur (user1 par exemple)
+        socket.emit('getConversations', 'john@example.com');
       
         return () => {
           socket.disconnect();
-          setConnected("Tu n'es pas connecté au serveur Socket.io");
         };
       }, []);
 
@@ -29,7 +29,15 @@ const HomeScreen = () => {
   return (
     <View>
         <Text>Home Screen</Text>
-        <Text>{connected}</Text>
+            {conversations.length > 0 ? (
+                <View>
+                    {conversations.map((conversation) => (
+                    <Text key={conversation._id}>{conversation.nom}</Text>
+                    ))}
+                </View>
+            ) : (
+                <ActivityIndicator size="large" />
+            )}
     </View>
   );
 };
